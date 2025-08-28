@@ -1,0 +1,13 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "./listmonk --config=config.toml"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "always"
+
+[env]
+LISTMONK_app__address = "0.0.0.0:$PORT"
+LISTMONK_app__admin_username = "$ADMIN_USERNAME"
+LISTMONK_app__admin_password = "$ADMIN_PASSWORD"
