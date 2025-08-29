@@ -5,9 +5,13 @@ USER root
 RUN apk add --no-cache curl
 USER listmonk
 
-# Health check with longer timeout for Railway startup
-HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
+# Copy startup script
+COPY --chown=listmonk:listmonk start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Health check with longer timeout for Railway deployment
+HEALTHCHECK --interval=60s --timeout=30s --start-period=180s --retries=5 \
   CMD curl -f http://localhost:${PORT:-9000}/api/health || exit 1
 
-# Start command that handles both install and run
-CMD sh -c "./listmonk --install --yes --idempotent && ./listmonk"
+# Use the startup script
+CMD ["/start.sh"]
