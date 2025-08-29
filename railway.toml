@@ -6,3 +6,9 @@ restartPolicyType = "always"
 
 [env]
 LISTMONK_app__address = "0.0.0.0:$PORT"
+LISTMONK_db__host = "$PGHOST"
+LISTMONK_db__port = "$PGPORT"
+LISTMONK_db__user = "$PGUSER" 
+LISTMONK_db__password = "$PGPASSWORD"
+LISTMONK_db__database = "$PGDATABASE"
+LISTMONK_db__ssl_mode = "require"
