@@ -5,12 +5,9 @@ USER root
 RUN apk add --no-cache curl
 USER listmonk
 
-# Expose port
-EXPOSE $PORT
+# Health check with longer timeout for Railway startup
+HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
+  CMD curl -f http://localhost:${PORT:-9000}/api/health || exit 1
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:$PORT/api/health || exit 1
-
-# Start command with install flag for first run
-CMD ["./listmonk", "--install"]
+# Start command that handles both install and run
+CMD sh -c "./listmonk --install --yes --idempotent && ./listmonk"
