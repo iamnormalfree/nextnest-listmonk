@@ -1,12 +1,9 @@
 FROM listmonk/listmonk:latest
 
-# Install curl for health checks
+# Install curl and setup startup script as root
 USER root
 RUN apk add --no-cache curl
-USER listmonk
-
-# Copy startup script
-COPY --chown=listmonk:listmonk start.sh /start.sh
+COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 # Health check with longer timeout for Railway deployment
