@@ -1,44 +1,40 @@
 #!/bin/sh
-set -e
+set -x  # Enable debug mode to see all commands
 
 echo "=== Listmonk Startup Script ==="
+echo "Current working directory: $(pwd)"
+echo "Listmonk binary exists: $(ls -la ./listmonk 2>/dev/null || echo 'NOT FOUND')"
 echo "Environment check:"
 echo "PORT: ${PORT:-9000}"
 echo "DATABASE_URL: ${DATABASE_URL:-(not set)}"
 echo "All LISTMONK env vars:"
-env | grep LISTMONK || echo "No LISTMONK vars found"
+env | grep LISTMONK | head -20 || echo "No LISTMONK vars found"
+
+# Test if we can run listmonk at all
+echo "Testing listmonk binary..."
+./listmonk --help | head -5 || {
+    echo "ERROR: Cannot execute listmonk binary"
+    exit 1
+}
 
 # Wait for database if needed
 if [ -n "$DATABASE_URL" ]; then
     echo "Waiting for database connection..."
-    sleep 15
+    sleep 20
 fi
 
 echo "Step 1: Installing database schema..."
-./listmonk --install --idempotent --yes --config "" || {
-    echo "Database install failed, but continuing..."
+./listmonk --install --idempotent --yes --config "" 2>&1 || {
+    echo "Database install failed, continuing anyway..."
 }
 
 echo "Step 2: Upgrading database..."
-./listmonk --upgrade --yes --config "" || {
-    echo "Database upgrade failed, but continuing..."
+./listmonk --upgrade --yes --config "" 2>&1 || {
+    echo "Database upgrade failed, continuing anyway..."
 }
 
 echo "Step 3: Starting Listmonk server..."
-echo "Listening on 0.0.0.0:${PORT:-9000}"
+echo "Will bind to: 0.0.0.0:${PORT:-9000}"
 
-# Start in background and check if it's responding
-./listmonk --config "" &
-LISTMONK_PID=$!
-
-# Wait a bit and check if the process is still running
-sleep 10
-if kill -0 $LISTMONK_PID 2>/dev/null; then
-    echo "Listmonk started successfully (PID: $LISTMONK_PID)"
-    # Check if port is listening
-    netstat -ln | grep ":${PORT:-9000}" || echo "Warning: Port ${PORT:-9000} not found in netstat"
-    wait $LISTMONK_PID
-else
-    echo "Listmonk process died"
-    exit 1
-fi
+# Start listmonk in foreground with full output
+exec ./listmonk --config ""
